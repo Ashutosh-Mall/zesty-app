@@ -16,17 +16,18 @@ import deliveryRoutes from "./routes/delivery.routes.js";
 dotenv.config();
 const app = express();
 
-const FRONTEND_URL = "https://zesty-app.vercel.app";
+const FRONTEND_URL = process.env.FRONTEND_URL || "https://zesty-app.vercel.app";
 
-// ----- CORS Middleware -----
-app.use(cors({
+// ----- CORS -----
+const corsOptions = {
   origin: FRONTEND_URL,
-  credentials: true, // allow cookies
+  credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
-}));
+};
 
-app.options("*", cors()); // preflight handler
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // handle preflight
 
 // ----- Middlewares -----
 app.use(express.json());
@@ -50,7 +51,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Server error" });
 });
 
-// ----- MongoDB Connection + Server Start -----
+// ----- MongoDB Connection + Start Server -----
 const startServer = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URL, {
@@ -62,9 +63,7 @@ const startServer = async () => {
     console.log("MongoDB connected successfully!");
 
     const port = process.env.PORT || 5000;
-    app.listen(port, () =>
-      console.log(`Server running at http://localhost:${port}`)
-    );
+    app.listen(port, () => console.log(`Server running on port ${port}`));
   } catch (err) {
     console.error("MongoDB connection failed:", err.message);
     process.exit(1);
