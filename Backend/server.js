@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 
 import userRouter from "./routes/auth.routes.js";
 import chatBotRouter from "./routes/chatbot.routes.js";
@@ -17,24 +18,15 @@ const app = express();
 
 const FRONTEND_URL = "https://zesty-app.vercel.app";
 
-// ----- CORS + Preflight Middleware -----
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", FRONTEND_URL);
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header(
-    "Access-Control-Allow-Methods",
-    "GET,POST,PUT,DELETE,OPTIONS"
-  );
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization"
-  );
+// ----- CORS Middleware -----
+app.use(cors({
+  origin: FRONTEND_URL,
+  credentials: true, // allow cookies
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200); // preflight response
-  }
-  next();
-});
+app.options("*", cors()); // preflight handler
 
 // ----- Middlewares -----
 app.use(express.json());
@@ -58,7 +50,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Server error" });
 });
 
-// ----- MongoDB Connection -----
+// ----- MongoDB Connection + Server Start -----
 const startServer = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URL, {
@@ -70,7 +62,9 @@ const startServer = async () => {
     console.log("MongoDB connected successfully!");
 
     const port = process.env.PORT || 5000;
-    app.listen(port, () => console.log(`Server running at http://localhost:${port}`));
+    app.listen(port, () =>
+      console.log(`Server running at http://localhost:${port}`)
+    );
   } catch (err) {
     console.error("MongoDB connection failed:", err.message);
     process.exit(1);
