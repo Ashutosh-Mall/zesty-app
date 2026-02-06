@@ -1,9 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
-dotenv.config();
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
-import cors from "cors";
 
 import userRouter from "./routes/auth.routes.js";
 import chatBotRouter from "./routes/chatbot.routes.js";
@@ -14,24 +12,36 @@ import orderRoutes from "./routes/order.routes.js";
 import customerRoutes from "./routes/customer.routes.js";
 import deliveryRoutes from "./routes/delivery.routes.js";
 
+dotenv.config();
 const app = express();
 
-const corsOptions = {
-  origin: "https://zesty-app.vercel.app",
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
+const FRONTEND_URL = "https://zesty-app.vercel.app";
 
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+// ----- CORS + Preflight Middleware -----
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", FRONTEND_URL);
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PUT,DELETE,OPTIONS"
+  );
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization"
+  );
 
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200); // preflight response
+  }
+  next();
+});
+
+// ----- Middlewares -----
 app.use(express.json());
 app.use(cookieParser());
 
-app.get("/", (req, res) => {
-  res.send("Zesty Backend is running!");
-});
+// ----- Routes -----
+app.get("/", (req, res) => res.send("Zesty Backend is running!"));
 
 app.use("/api/auth", userRouter);
 app.use("/api", chatBotRouter);
@@ -42,12 +52,14 @@ app.use("/api/order", orderRoutes);
 app.use("/api/customer", customerRoutes);
 app.use("/api/delivery", deliveryRoutes);
 
+// ----- Error Handler -----
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ message: "Server error" });
 });
 
-const connectDb = async () => {
+// ----- MongoDB Connection -----
+const startServer = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URL, {
       useNewUrlParser: true,
@@ -56,17 +68,13 @@ const connectDb = async () => {
       socketTimeoutMS: 45000,
     });
     console.log("MongoDB connected successfully!");
+
+    const port = process.env.PORT || 5000;
+    app.listen(port, () => console.log(`Server running at http://localhost:${port}`));
   } catch (err) {
     console.error("MongoDB connection failed:", err.message);
     process.exit(1);
   }
-};
-
-const port = process.env.PORT || 5000;
-
-const startServer = async () => {
-  await connectDb();
-  app.listen(port, () => console.log(`Server running at http://localhost:${port}`));
 };
 
 startServer();
