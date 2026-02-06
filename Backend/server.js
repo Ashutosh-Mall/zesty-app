@@ -1,8 +1,10 @@
 import express from "express";
 import dotenv from "dotenv";
 dotenv.config();
-import connectDb from "./config/db.js";
+import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
+import cors from "cors";
+
 import userRouter from "./routes/auth.routes.js";
 import chatBotRouter from "./routes/chatbot.routes.js";
 import vendorRouter from "./routes/vendor.routes.js";
@@ -10,27 +12,19 @@ import foodItemRouter from "./routes/foodItem.routes.js";
 import cartRoutes from "./routes/cart.routes.js";
 import orderRoutes from "./routes/order.routes.js";
 import customerRoutes from "./routes/customer.routes.js";
-import deliveryRoutes from "./routes/delivery.routes.js"
-import cors from "cors";
+import deliveryRoutes from "./routes/delivery.routes.js";
+
 const app = express();
 
-app.use(cors({
-  origin: "https://zesty-app.vercel.app", 
-  credentials: true,                 
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-}));
-
-
-app.options("*", cors({
+const corsOptions = {
   origin: "https://zesty-app.vercel.app",
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
-}));
+};
 
-
-const port = process.env.PORT || 5000;
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 app.use(express.json());
 app.use(cookieParser());
@@ -43,10 +37,8 @@ app.use("/api/auth", userRouter);
 app.use("/api", chatBotRouter);
 app.use("/api/vendor", vendorRouter);
 app.use("/api/food", foodItemRouter);
-
 app.use("/api/cart", cartRoutes);
 app.use("/api/order", orderRoutes);
-
 app.use("/api/customer", customerRoutes);
 app.use("/api/delivery", deliveryRoutes);
 
@@ -55,15 +47,26 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Server error" });
 });
 
-const startServer = async () => {
+const connectDb = async () => {
   try {
-    await connectDb(); 
-    app.listen(port, () => console.log(`Server running at http://localhost:${port}`));
+    await mongoose.connect(process.env.MONGODB_URL, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
+    });
+    console.log("MongoDB connected successfully!");
   } catch (err) {
-    console.error("Failed to start server:", err);
+    console.error("MongoDB connection failed:", err.message);
     process.exit(1);
   }
 };
 
-startServer();
+const port = process.env.PORT || 5000;
 
+const startServer = async () => {
+  await connectDb();
+  app.listen(port, () => console.log(`Server running at http://localhost:${port}`));
+};
+
+startServer();
