@@ -14,12 +14,12 @@ import deliveryRoutes from "./routes/delivery.routes.js"
 import cors from "cors";
 const app = express();
 
-app.use(
-  cors({
-    origin: true,
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: "https://zesty-app.vercel.app", 
+  credentials: true,                 
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 
 const port = process.env.PORT || 5000;
 
