@@ -46,7 +46,15 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Server error" });
 });
 
-app.listen(port, async () => {
-  await connectDb();
-  console.log(`Server running at http://localhost:${port}`);
-});
+const startServer = async () => {
+  try {
+    await connectDb(); 
+    app.listen(port, () => console.log(`Server running at http://localhost:${port}`));
+  } catch (err) {
+    console.error("Failed to start server:", err);
+    process.exit(1);
+  }
+};
+
+startServer();
+
