@@ -26,6 +26,10 @@ const port = process.env.PORT || 5000;
 app.use(express.json());
 app.use(cookieParser());
 
+app.get("/", (req, res) => {
+  res.send("Zesty Backend is running!");
+});
+
 app.use("/api/auth", userRouter);
 app.use("/api", chatBotRouter);
 app.use("/api/vendor", vendorRouter);
