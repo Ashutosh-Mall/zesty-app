@@ -21,6 +21,15 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
+
+app.options("*", cors({
+  origin: "https://zesty-app.vercel.app",
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
+
+
 const port = process.env.PORT || 5000;
 
 app.use(express.json());
