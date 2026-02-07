@@ -26,6 +26,10 @@ app.use(
 
 const port = process.env.PORT || 5000;
 
+app.get("/", (req, res) => {
+  res.status(200).send("Zesty backend is running 🚀");
+});
+
 
 app.use(express.json());
 app.use(cookieParser());
