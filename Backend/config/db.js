@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 let isConnected = false;
 const connectDb = async () => {
+  if (isConnected) return;
   try {
     await mongoose.connect(process.env.MONGODB_URL, {
       useNewUrlParser: true,
